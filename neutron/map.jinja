@@ -1,0 +1,110 @@
+# -*- coding: utf-8 -*-
+# vim: ft=jinja
+
+{% import_yaml 'neutron/defaults.yaml' as defaults %}
+
+{% set os_family_map_user = salt['grains.filter_by']({
+    'Debian': {
+        'group': {
+          'name': 'neutron',
+          'gid': '402',
+        },
+        'user': {
+          'name': 'neutron',
+          'uid': '402',
+          'home': '/var/lib/neutron',
+          'shell': '/bin/false',
+          'fullname': 'OpenStack Neutron Daemons',
+          'groups': ['neutron'],
+        },
+    },
+    'RedHat': {
+        'group': {
+          'name': 'neutron',
+          'gid': '402',
+        },
+        'user': {
+          'name': 'neutron',
+          'uid': '402',
+          'home': '/var/lib/neutron',
+          'shell': '/sbin/nologin',
+          'fullname': 'OpenStack Neutron Daemons',
+          'groups': ['neutron'],
+        },
+    },
+  }, 
+  grain="os_family",
+  merge=salt['pillar.get']('neutron:lookup:network')) 
+%}
+{% do defaults.user.update(os_family_map_user) %}
+{% set user = salt['pillar.get'](
+        'neutron:user',
+        default=defaults.user,
+        merge=True
+    )
+%}
+
+{% set os_family_map_controller = salt['grains.filter_by']({
+    'Debian': {
+        'pkgs': ['neutron-server neutron-plugin-ml2', 'neutron-linuxbridge-agent', 'neutron-l3-agent', 'neutron-dhcp-agent', 'neutron-metadata-agent', 'python-neutronclient', 'python-memcache', 'python-openstackclient'],
+        'services': ['neutron-server', 'neutron-linuxbridge-agent', 'neutron-dhcp-agent', 'neutron-metadata-agent'],
+        'services_selfservice': ['neutron-l3-agent.service'],
+    },
+    'RedHat': {
+        'pkgs': ['openstack-neutron', 'openstack-neutron-ml2', 'openstack-neutron-linuxbridge', 'ebtables'],
+        'services': ['neutron-server', 'neutron-linuxbridge-agent', 'neutron-dhcp-agent', 'neutron-metadata-agent'],
+        'services_selfservice': ['neutron-l3-agent.service'],
+    },
+  },
+  grain="os_family",
+  merge=salt['pillar.get']('neutron:lookup:controller'))
+%}
+{% do defaults.controller.update(os_family_map_controller) %}
+{% set controller = salt['pillar.get'](
+        'neutron:controller',
+        default=defaults.controller,
+        merge=True
+    )
+%}
+
+{% set os_family_map_network = salt['grains.filter_by']({
+    'Debian': {
+        'pkgs': ['openstack-neutron-linuxbridge', 'python-neutronclient', 'python-memcache', 'python-openstackclient', 'ebtables', 'ipset'],
+        'services': ['neutron-linuxbridge-agent'],
+    },
+    'RedHat': {
+        'pkgs': ['openstack-neutron-linuxbridge', 'python-neutron', 'python-memcached', 'python-neutronclient', 'python-openstackclient', 'ebtables', 'ipset'],
+        'services': ['neutron-linuxbridge-agent'],
+    },
+  }, 
+  grain="os_family",
+  merge=salt['pillar.get']('neutron:lookup:network')) 
+%}
+{% do defaults.network.update(os_family_map_network) %}
+{% set network = salt['pillar.get'](
+        'neutron:network',
+        default=defaults.network,
+        merge=True
+    )
+%}
+
+{% set os_family_map_compute = salt['grains.filter_by']({
+    'Debian': {
+        'pkgs': ['openstack-neutron-linuxbridge', 'python-neutronclient', 'python-memcache', 'python-openstackclient', 'ebtables', 'ipset'],
+        'services': ['neutron-linuxbridge-agent'],
+    },
+    'RedHat': {
+        'pkgs': ['openstack-neutron-linuxbridge', 'python-neutron', 'python-memcached', 'python-neutronclient', 'python-openstackclient', 'ebtables', 'ipset'],
+        'services': ['neutron-linuxbridge-agent'],
+    },
+  },
+  grain="os_family",
+  merge=salt['pillar.get']('neutron:lookup:compute'))
+%}
+{% do defaults.compute.update(os_family_map_compute) %}
+{% set compute = salt['pillar.get'](
+        'neutron:compute',
+        default=defaults.compute,
+        merge=True
+    )
+%}
