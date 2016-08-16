@@ -1,140 +1,214 @@
 # -*- coding: utf-8 -*-
 # vim: ft=jinja
 
-{% import_yaml 'neutron/defaults.yaml' as defaults %}
+{%- load_yaml as os_family_map_common %}
+base:
+  conffile: /etc/neutron/neutron.conf
+  engine: linuxbridge
+  selfservice: False
+  service:
+    state: running
+    enable: True
+default: 
+  group:
+    name: neutron
+    gid: 402
+  user:
+    name: neutron
+    uid: 402
+    home: /var/lib/neutron
+    shell: /sbin/nologin
+    fullname: "OpenStack Neutron Daemons"
+    groups:
+      - neutron
+Debian:
+  group:
+    name: neutron
+    gid: 402
+  user:
+    name: neutron
+    uid: 402
+    home: /var/lib/neutron
+    shell: /bin/false
+    fullname: "OpenStack Neutron Daemons"
+    groups: 
+      - neutron
+RedHat:
+  group:
+    name: neutron
+    gid: 402
+  user:
+    name: neutron
+    uid: 402
+    home: /var/lib/neutron
+    shell: /sbin/nologin
+    fullname: "OpenStack Neutron Daemons"
+    groups: 
+      - neutron
+{%- endload %}
+{%- set map_common = salt['grains.filter_by'](os_family_map_common, grain="os_family", merge=salt['pillar.get']('neutron:lookup:common'), default='default', base='base') %}
+{%- set common = salt['pillar.get']('neutron:common', default=map_common, merge=True) %}
 
-{% set os_family_map_user = salt['grains.filter_by']({
-    'Debian': {
-        'group': {
-          'name': 'neutron',
-          'gid': '402',
-        },
-        'user': {
-          'name': 'neutron',
-          'uid': '402',
-          'home': '/var/lib/neutron',
-          'shell': '/bin/false',
-          'fullname': 'OpenStack Neutron Daemons',
-          'groups': ['neutron'],
-        },
-    },
-    'RedHat': {
-        'group': {
-          'name': 'neutron',
-          'gid': '402',
-        },
-        'user': {
-          'name': 'neutron',
-          'uid': '402',
-          'home': '/var/lib/neutron',
-          'shell': '/sbin/nologin',
-          'fullname': 'OpenStack Neutron Daemons',
-          'groups': ['neutron'],
-        },
-    },
-  }, 
-  grain="os_family",
-  merge=salt['pillar.get']('neutron:lookup:network')) 
-%}
-{% do defaults.user.update(os_family_map_user) %}
-{% set user = salt['pillar.get'](
-        'neutron:user',
-        default=defaults.user,
-        merge=True
-    )
-%}
+{%- load_yaml as os_family_map_controller %}
+base:
+  enabled: False
+  services:
+    - neutron-server
+    - neutron-dhcp-agent
+    - neutron-metadata-agent
+  services_linuxbridge:
+    - neutron-linuxbridge-agent
+  services_openvswitch:
+    - neutron-openvswitch-agent
+  services_selfservice:
+    - neutron-l3-agent.service
+default: 
+  pkgs:
+    - openstack-neutron
+    - openstack-neutron-ml2
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcached
+    - ebtables
+  pkgs_linuxbridge:
+    - openstack-neutron-linuxbridge
+  pkgs_openvswitch:
+    - openstack-neutron-openvswitch
+  pkgs_selfservice: []
+Debian:
+  pkgs:
+    - neutron-server
+    - neutron-plugin-ml2
+    - neutron-dhcp-agent
+    - neutron-metadata-agent
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcache
+  pkgs_linuxbridge:
+    - neutron-linuxbridge-agent
+  pkgs_openvswitch:
+    - neutron-openvswitch-agent
+  pkgs_selfservice:
+    - neutron-l3-agent
+RedHat:
+  pkgs:
+    - openstack-neutron
+    - openstack-neutron-ml2
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcached
+    - ebtables
+  pkgs_linuxbridge:
+    - openstack-neutron-linuxbridge
+  pkgs_openvswitch:
+    - openstack-neutron-openvswitch
+  pkgs_selfservice: []
+{%- endload %}
+{%- set map_controller = salt['grains.filter_by'](os_family_map_controller, grain="os_family", merge=salt['pillar.get']('neutron:lookup:controller'), default='default', base='base') %}
+{%- set controller = salt['pillar.get']('neutron:controller', default=map_controller, merge=True) %}
 
-{% set os_family_map_controller = salt['grains.filter_by']({
-    'Debian': {
-        'pkgs': ['neutron-server', 'neutron-plugin-ml2', 'neutron-dhcp-agent', 'neutron-metadata-agent', 'python-neutronclient', 'python-openstackclient', 'python-memcache'],
-        'pkgs_linuxbridge': ['neutron-linuxbridge-agent'],
-        'pkgs_openvswitch': ['neutron-openvswitch-agent'],
-        'pkgs_selfservice': ['neutron-l3-agent'],
-        'services': ['neutron-server', 'neutron-dhcp-agent', 'neutron-metadata-agent'],
-        'services_linuxbridge': ['neutron-linuxbridge-agent'],
-        'services_openvswitch': ['neutron-openvswitch-agent'],
-        'services_selfservice': ['neutron-l3-agent.service'],
-    },
-    'RedHat': {
-        'pkgs': ['openstack-neutron', 'openstack-neutron-ml2', 'python-neutronclient', 'python-openstackclient', 'python-memcached', 'ebtables'],
-        'pkgs_linuxbridge': ['openstack-neutron-linuxbridge'],
-        'pkgs_openvswitch': ['openstack-neutron-openvswitch'],
-        'pkgs_selfservice': [],
-        'services': ['neutron-server', 'neutron-dhcp-agent', 'neutron-metadata-agent'],
-        'services_linuxbridge': ['neutron-linuxbridge-agent'],
-        'services_openvswitch': ['neutron-openvswitch-agent'],
-        'services_selfservice': ['neutron-l3-agent.service'],
-    },
-  },
-  grain="os_family",
-  merge=salt['pillar.get']('neutron:lookup:controller'))
-%}
-{% do defaults.controller.update(os_family_map_controller) %}
-{% set controller = salt['pillar.get'](
-        'neutron:controller',
-        default=defaults.controller,
-        merge=True
-    )
-%}
+{%- load_yaml as os_family_map_network %}
+base:
+  enabled: False
+  services: []
+  services_openvswitch:
+    - neutron-openvswitch-agent
+  services_selfservice: []
+default: 
+  pkgs:
+    - python-neutron
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcached
+    - ebtables
+    - ipset
+  pkgs_openvswitch:
+    - openstack-neutron-openvswitch
+  pkgs_selfservice: []
+Debian:
+  pkgs:
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcache
+  pkgs_openvswitch:
+    - neutron-openvswitch-agent
+  pkgs_selfservice: []
+RedHat:
+  pkgs:
+    - python-neutron
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcached
+    - ebtables
+    - ipset
+  pkgs_openvswitch:
+    - openstack-neutron-openvswitch
+  pkgs_selfservice: []
+{%- endload %}
+{%- set map_network = salt['grains.filter_by'](os_family_map_network, grain="os_family", merge=salt['pillar.get']('neutron:lookup:network'), default='default', base='base') %}
+{%- set network = salt['pillar.get']('neutron:network', default=map_network, merge=True) %}
 
-{% set os_family_map_network = salt['grains.filter_by']({
-    'Debian': {
-        'pkgs': ['python-neutronclient', 'python-openstackclient', 'python-memcache'],
-        'pkgs_openvswitch': ['neutron-openvswitch-agent'],
-        'pkgs_selfservice': [],
-        'services': [],
-        'services_openvswitch': ['neutron-openvswitch-agent'],
-        'services_selfservice': [],
-    },
-    'RedHat': {
-        'pkgs': ['python-neutron', 'python-neutronclient', 'python-openstackclient', 'python-memcached', 'ebtables', 'ipset'],
-        'pkgs_openvswitch': ['openstack-neutron-openvswitch'],
-        'pkgs_selfservice': [],
-        'services': [],
-        'services_openvswitch': ['neutron-openvswitch-agent'],
-        'services_selfservice': [],
-    },
-  }, 
-  grain="os_family",
-  merge=salt['pillar.get']('neutron:lookup:network')) 
-%}
-{% do defaults.network.update(os_family_map_network) %}
-{% set network = salt['pillar.get'](
-        'neutron:network',
-        default=defaults.network,
-        merge=True
-    )
-%}
+{%- load_yaml as os_family_map_compute %}
+base:
+  enabled: False
+  services: []
+  services_linuxbridge:
+    - neutron-linuxbridge-agent
+  services_openvswitch:
+    - neutron-openvswitch-agent
+  services_selfservice: []
+default: 
+  pkgs:
+    - python-neutron
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcached
+    - ebtables
+    - ipset
+  pkgs_linuxbridge:
+    - openstack-neutron-linuxbridge
+  pkgs_openvswitch:
+    - openstack-neutron-openvswitch
+  pkgs_selfservice: []
+Debian:
+  pkgs:
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcache
+  pkgs_linuxbridge:
+    - neutron-linuxbridge-agent
+  pkgs_openvswitch:
+    - neutron-openvswitch-agent
+  pkgs_selfservice: []
+RedHat:
+  pkgs:
+    - python-neutron
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcached
+    - ebtables
+    - ipset
+  pkgs_linuxbridge:
+    - openstack-neutron-linuxbridge
+  pkgs_openvswitch:
+    - openstack-neutron-openvswitch
+  pkgs_selfservice: []
+{%- endload %}
+{%- set map_compute = salt['grains.filter_by'](os_family_map_compute, grain="os_family", merge=salt['pillar.get']('neutron:lookup:compute'), default='default', base='base') %}
+{%- set compute = salt['pillar.get']('neutron:compute', default=map_compute, merge=True) %}
 
-{% set os_family_map_compute = salt['grains.filter_by']({
-    'Debian': {
-        'pkgs': ['python-neutronclient', 'python-openstackclient', 'python-memcache'],
-        'pkgs_linuxbridge': ['neutron-linuxbridge-agent'],
-        'pkgs_openvswitch': ['neutron-openvswitch-agent'],
-        'pkgs_selfservice': [],
-        'services': [],
-        'services_linuxbridge': ['neutron-linuxbridge-agent'],
-        'services_openvswitch': ['neutron-openvswitch-agent'],
-        'services_selfservice': [],
-    },
-    'RedHat': {
-        'pkgs': ['python-neutron', 'python-neutronclient', 'python-openstackclient', 'python-memcached', 'ebtables', 'ipset'],
-        'pkgs_linuxbridge': ['openstack-neutron-linuxbridge'],
-        'pkgs_openvswitch': ['openstack-neutron-openvswitch'],
-        'pkgs_selfservice': [],
-        'services': [],
-        'services_linuxbridge': ['neutron-linuxbridge-agent'],
-        'services_openvswitch': ['neutron-openvswitch-agent'],
-        'services_selfservice': [],
-    },
-  },
-  grain="os_family",
-  merge=salt['pillar.get']('neutron:lookup:compute'))
-%}
-{% do defaults.compute.update(os_family_map_compute) %}
-{% set compute = salt['pillar.get'](
-        'neutron:compute',
-        default=defaults.compute,
-        merge=True
-    )
-%}
+{%- set server = {} %}
+
+{%- set server = salt['slsutil.merge'](server, common, merge_lists=True) %}
+
+{%- if controller.enabled %}
+{%- set server = salt['slsutil.merge'](server, controller, merge_lists=True) %}
+{%- endif %}
+
+{%- if network.enabled %}
+{%- set server = salt['slsutil.merge'](server, network, merge_lists=True) %}
+{%- endif %}
+
+{%- if compute.enabled %}
+{%- set server = salt['slsutil.merge'](server, compute, merge_lists=True) %}
+{%- endif %}
