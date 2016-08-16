@@ -1,19 +1,19 @@
-{%- from "neutron/map.jinja" import user with context -%}
+{%- from "neutron/map.jinja" import server with context -%}
 neutron_user__user:
   user.present:
-    - name: {{user.user.name}}
-    - home: {{user.user.home}}
-    - uid: {{user.user.uid}}
-    - gid: {{user.group.gid}}
-    - groups: {{user.user.groups|json}}
-    - shell: {{user.user.shell}}
-    - fullname: {{user.user.fullname}}
+    - name: {{server.user.name}}
+    - home: {{server.user.home}}
+    - uid: {{server.user.uid}}
+    - gid: {{server.group.gid}}
+    - groups: {{server.user.groups|json}}
+    - shell: {{server.user.shell}}
+    - fullname: {{server.user.fullname}}
     - system: True
 
 neutron_user__group:
   group.present:
-    - name: {{user.group.name}}
-    - gid: {{user.group.gid}}
+    - name: {{server.group.name}}
+    - gid: {{server.group.gid}}
     - system: True
     - require_in:
       - user: neutron_user__user
