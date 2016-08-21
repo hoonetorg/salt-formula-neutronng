@@ -3,12 +3,14 @@
 
 {%- load_yaml as os_family_map_common %}
 base:
-  conffile: /etc/neutron/neutron.conf
-  engine: linuxbridge
+  sysconfdir: /etc/sysconfig
   selfservice: False
   service:
     state: running
     enable: True
+  backend:
+    engine: linuxbridge
+  plugin: ml2
 default: 
   group:
     name: neutron
@@ -22,6 +24,7 @@ default:
     groups:
       - neutron
 Debian:
+  sysconfdir: /etc/default
   group:
     name: neutron
     gid: 402
