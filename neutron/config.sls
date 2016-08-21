@@ -99,12 +99,13 @@ neutron_config__file_l3_agent.ini:
 
 neutron_config__syncdb:
   cmd.run:
+    - names:
 {%- if server.plugin in ['ml2'] %}
-    - name: neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
+      - neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
 {%- elif server.plugin in ['opencontrail'] %}
-    - name: neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/opencontrail/ContrailPlugin.ini upgrade head
+      - neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/opencontrail/ContrailPlugin.ini upgrade head
 {%- elif server.plugin in ['midonet'] %}
-    - name: neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/midonet/midonet.ini upgrade head
+      - neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/midonet/midonet.ini upgrade head
 {%- endif %}
     - user: {{server.user.name}}
     - group: {{server.group.name}}
