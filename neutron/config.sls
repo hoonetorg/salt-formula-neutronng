@@ -26,6 +26,37 @@ neutron_config__file_neutron.conf:
 #    - require:
 #      - pkg: neutron_packages__packages
 
+{%- if network.get('enabled', False) %}
+# it's probably ok to always install a dhcp agent, because networks can be created without using dhcp
+# so if dhcp is not needed -> it won't be used
+neutron_config__file_dhcp_agent.ini:
+  file.managed:
+    - name: /etc/neutron/dhcp_agent.ini
+    - source: salt://neutron/files/{{ server.version }}/dhcp_agent.ini.{{ grains.os_family }}
+    - template: jinja
+    - require:
+      - pkg: neutron_packages__packages
+
+neutron_config__file_metadata_agent.ini:
+  file.managed:
+    - name: /etc/neutron/metadata_agent.ini
+    - source: salt://neutron/files/{{ server.version }}/metadata_agent.ini.{{ grains.os_family }}
+    - template: jinja
+    - require:
+      - pkg: neutron_packages__packages
+
+{%- if server.selfservice %}
+neutron_config__file_l3_agent.ini:
+  file.managed:
+    - name: /etc/neutron/l3_agent.ini
+    - source: salt://neutron/files/{{ server.version }}/l3_agent.ini.{{ grains.os_family }}
+    - template: jinja
+    - require:
+      - pkg: neutron_packages__packages
+{%- endif %}
+{%- endif %}
+
+{%- if network.get('enabled', False) or compute.get('enabled', False) %}
 {%- if server.get('backend', {}).get('engine', False) %}
 {%- if server.backend.engine in ['linuxbridge'] %}
 neutron_config__file_backend_{{server.backend.engine}}:
@@ -35,6 +66,7 @@ neutron_config__file_backend_{{server.backend.engine}}:
     - template: jinja
     - require:
       - pkg: neutron_packages__packages
+{%- endif %}
 {%- endif %}
 {%- endif %}
 
@@ -69,33 +101,6 @@ neutron_config__file_default_plugin:
 {%- endif %}
 {%- endif %}
 
-# it's probably ok to always install a dhcp agent, because networks can be created without using dhcp
-# so if dhcp is not needed -> it won't be used
-neutron_config__file_dhcp_agent.ini:
-  file.managed:
-    - name: /etc/neutron/dhcp_agent.ini
-    - source: salt://neutron/files/{{ server.version }}/dhcp_agent.ini.{{ grains.os_family }}
-    - template: jinja
-    - require:
-      - pkg: neutron_packages__packages
-
-neutron_config__file_metadata_agent.ini:
-  file.managed:
-    - name: /etc/neutron/metadata_agent.ini
-    - source: salt://neutron/files/{{ server.version }}/metadata_agent.ini.{{ grains.os_family }}
-    - template: jinja
-    - require:
-      - pkg: neutron_packages__packages
-
-{%- if server.selfservice %}
-neutron_config__file_l3_agent.ini:
-  file.managed:
-    - name: /etc/neutron/l3_agent.ini
-    - source: salt://neutron/files/{{ server.version }}/l3_agent.ini.{{ grains.os_family }}
-    - template: jinja
-    - require:
-      - pkg: neutron_packages__packages
-{%- endif %}
 
 neutron_config__syncdb:
   cmd.run:
@@ -112,13 +117,13 @@ neutron_config__syncdb:
     - require:
       - file: neutron_config__file_neutron.conf
       #- file: neutron_config__file_api-paste.ini
-      - file: neutron_config__file_backend_{{server.backend.engine}}
+      #- file: neutron_config__file_backend_{{server.backend.engine}}
       - file: neutron_config__file_plugin_{{server.plugin}}
       - file: neutron_config__file_default_plugin
-      - file: neutron_config__file_dhcp_agent.ini
-      - file: neutron_config__file_metadata_agent.ini
+      #- file: neutron_config__file_dhcp_agent.ini
+      #- file: neutron_config__file_metadata_agent.ini
 {%- if server.selfservice %}
-      - file: neutron_config__file_l3_agent.ini
+      #- file: neutron_config__file_l3_agent.ini
 {%- endif %}
 
 {%- endif %}
