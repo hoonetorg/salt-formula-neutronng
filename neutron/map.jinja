@@ -71,9 +71,53 @@ base:
   enabled: False
   services:
     - neutron-server
+  services_linuxbridge: []
+  services_openvswitch: []
+  services_selfservice: []
+default: 
+  pkgs:
+    - openstack-neutron
+    - openstack-neutron-ml2
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcached
+    - ebtables
+  pkgs_linuxbridge: []
+  pkgs_openvswitch: []
+  pkgs_selfservice: []
+Debian:
+  pkgs:
+    - neutron-server
+    - neutron-plugin-ml2
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcache
+  pkgs_linuxbridge: []
+  pkgs_openvswitch: []
+  pkgs_selfservice:
+    - neutron-l3-agent
+RedHat:
+  pkgs:
+    - openstack-neutron
+    - openstack-neutron-ml2
+    - python-neutronclient
+    - python-openstackclient
+    - python-memcached
+    - ebtables
+  pkgs_linuxbridge: []
+  pkgs_openvswitch: []
+  pkgs_selfservice: []
+{%- endload %}
+{%- set map_controller = salt['grains.filter_by'](os_family_map_controller, grain="os_family", merge=salt['pillar.get']('neutron:lookup:controller'), default='default', base='base') %}
+{%- set controller = salt['pillar.get']('neutron:controller', default=map_controller, merge=True) %}
+
+{%- load_yaml as os_family_map_network %}
+base:
+  enabled: False
+  services:
     - neutron-dhcp-agent
     - neutron-metadata-agent
-  services_linuxbridge:
+  services_linuxbridge: 
     - neutron-linuxbridge-agent
   services_openvswitch:
     - neutron-openvswitch-agent
@@ -83,10 +127,12 @@ default:
   pkgs:
     - openstack-neutron
     - openstack-neutron-ml2
+    - python-neutron
     - python-neutronclient
     - python-openstackclient
     - python-memcached
     - ebtables
+    - ipset
   pkgs_linuxbridge:
     - openstack-neutron-linuxbridge
   pkgs_openvswitch:
@@ -94,8 +140,6 @@ default:
   pkgs_selfservice: []
 Debian:
   pkgs:
-    - neutron-server
-    - neutron-plugin-ml2
     - neutron-dhcp-agent
     - neutron-metadata-agent
     - python-neutronclient
@@ -111,53 +155,14 @@ RedHat:
   pkgs:
     - openstack-neutron
     - openstack-neutron-ml2
+    - python-neutron
     - python-neutronclient
     - python-openstackclient
     - python-memcached
     - ebtables
+    - ipset
   pkgs_linuxbridge:
     - openstack-neutron-linuxbridge
-  pkgs_openvswitch:
-    - openstack-neutron-openvswitch
-  pkgs_selfservice: []
-{%- endload %}
-{%- set map_controller = salt['grains.filter_by'](os_family_map_controller, grain="os_family", merge=salt['pillar.get']('neutron:lookup:controller'), default='default', base='base') %}
-{%- set controller = salt['pillar.get']('neutron:controller', default=map_controller, merge=True) %}
-
-{%- load_yaml as os_family_map_network %}
-base:
-  enabled: False
-  services: []
-  services_openvswitch:
-    - neutron-openvswitch-agent
-  services_selfservice: []
-default: 
-  pkgs:
-    - python-neutron
-    - python-neutronclient
-    - python-openstackclient
-    - python-memcached
-    - ebtables
-    - ipset
-  pkgs_openvswitch:
-    - openstack-neutron-openvswitch
-  pkgs_selfservice: []
-Debian:
-  pkgs:
-    - python-neutronclient
-    - python-openstackclient
-    - python-memcache
-  pkgs_openvswitch:
-    - neutron-openvswitch-agent
-  pkgs_selfservice: []
-RedHat:
-  pkgs:
-    - python-neutron
-    - python-neutronclient
-    - python-openstackclient
-    - python-memcached
-    - ebtables
-    - ipset
   pkgs_openvswitch:
     - openstack-neutron-openvswitch
   pkgs_selfservice: []
