@@ -13,6 +13,20 @@ base:
     enable: True
   backend:
     engine: linuxbridge
+    plugin: ml2
+    ml2:
+      debug: False
+      type_drivers: 
+        - flat
+        - vxlan
+        - vlan
+      tenant_network_types: 
+        - vxlan
+        - vlan
+      mechanism_drivers: 
+        - linuxbridge
+      extension_drivers: 
+        - port_security
   bind:
     host: '0.0.0.0'
     port: '9696'
@@ -21,20 +35,6 @@ base:
     region: RegionOne
   compute:
     region: RegionOne
-  plugin: ml2
-  ml2:
-    debug: False
-    type_drivers: 
-      - flat
-      - vxlan
-      - vlan
-    tenant_network_types: 
-      - vxlan
-      - vlan
-    mechanism_drivers: 
-      - linuxbridge
-    extension_drivers: 
-      - port_security
   l3_ha: False
   dhcp_agents_per_network: 1
 default: 

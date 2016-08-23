@@ -72,8 +72,8 @@ neutron_config__file_backend_{{server.backend.engine}}:
 
 
 {%- if controller.get('enabled', False) %}
-{%- if server.plugin in ['ml2'] %}
-neutron_config__file_plugin_{{server.plugin}}:
+{%- if server.backend.plugin in ['ml2'] %}
+neutron_config__file_plugin_{{server.backend.plugin}}:
   file.managed:
     - name: /etc/neutron/plugins/ml2/ml2_conf.ini
     - source: salt://neutron/files/{{ server.version }}/plugins/ml2/ml2_conf.ini.{{ grains.os_family }}
@@ -87,7 +87,7 @@ neutron_config__file_default_plugin:
     - name: /etc/neutron/plugin.ini
     - target: /etc/neutron/plugins/ml2/ml2_conf.ini
     - require: 
-      - file: neutron_config__file_plugin_{{server.plugin}}
+      - file: neutron_config__file_plugin_{{server.backend.plugin}}
 {%- else %}
 neutron_config__file_default_plugin:
   file.managed:
@@ -97,7 +97,7 @@ neutron_config__file_default_plugin:
     - require:
       - pkg: neutron_packages__packages
     - require_in:
-      - file: neutron_config__file_plugin_{{server.plugin}}
+      - file: neutron_config__file_plugin_{{server.backend.plugin}}
 {%- endif %}
 {%- endif %}
 
@@ -105,11 +105,11 @@ neutron_config__file_default_plugin:
 neutron_config__syncdb:
   cmd.run:
     - names:
-{%- if server.plugin in ['ml2'] %}
+{%- if server.backend.plugin in ['ml2'] %}
       - neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
-{%- elif server.plugin in ['opencontrail'] %}
+{%- elif server.backend.plugin in ['opencontrail'] %}
       - neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/opencontrail/ContrailPlugin.ini upgrade head
-{%- elif server.plugin in ['midonet'] %}
+{%- elif server.backend.plugin in ['midonet'] %}
       - neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/midonet/midonet.ini upgrade head
 {%- endif %}
     - user: {{server.user.name}}
@@ -118,7 +118,7 @@ neutron_config__syncdb:
       - file: neutron_config__file_neutron.conf
       #- file: neutron_config__file_api-paste.ini
       #- file: neutron_config__file_backend_{{server.backend.engine}}
-      - file: neutron_config__file_plugin_{{server.plugin}}
+      - file: neutron_config__file_plugin_{{server.backend.plugin}}
       - file: neutron_config__file_default_plugin
       #- file: neutron_config__file_dhcp_agent.ini
       #- file: neutron_config__file_metadata_agent.ini

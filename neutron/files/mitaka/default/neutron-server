@@ -3,10 +3,10 @@
 
 # path to config file corresponding to the core_plugin specified in
 # neutron.conf
-{%- if server.plugin in ['ml2'] %}
+{%- if server.backend.plugin in ['ml2'] %}
 NEUTRON_PLUGIN_CONFIG="/etc/neutron/plugins/ml2/ml2_conf.ini"
-{%- elif if server.plugin in ['opencontrail'] %}
+{%- elif if server.backend.plugin in ['opencontrail'] %}
 NEUTRON_PLUGIN_CONFIG="/etc/neutron/plugins/opencontrail/ContrailPlugin.ini"
-{%- elif if server.plugin in ['midonet'] %}
+{%- elif if server.backend.plugin in ['midonet'] %}
 NEUTRON_PLUGIN_CONFIG="/etc/neutron/plugins/midonet/midonet.ini"
 {%- endif %}
