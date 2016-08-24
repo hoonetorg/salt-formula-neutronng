@@ -36,6 +36,9 @@ base:
         - port_security
     linuxbridge:
       debug: False
+      service:
+        state: running
+        enable: True
   bind:
     host: '0.0.0.0'
     port: '9696'
@@ -144,7 +147,7 @@ base:
   services_openvswitch:
     - neutron-openvswitch-agent
   services_selfservice:
-    - neutron-l3-agent.service
+    - neutron-l3-agent
 default: 
   pkgs:
     - openstack-neutron
